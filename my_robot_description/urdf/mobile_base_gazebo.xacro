@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="motors" default="false"/>
+
+  <ros2_control name="Wheels" type="system">
+    <hardware>
+      <xacro:if value="$(arg motors)">
+        <plugin>my_robot_bringup/FeatherWingMotors</plugin>
+      </xacro:if>
+      <xacro:unless value="$(arg motors)">
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </xacro:unless>
+    </hardware>
+
+    <xacro:macro name="wheel_interface" params="name">
+      <joint name="${name}">
+        <xacro:if value="$(arg motors)">
+          <command_interface name="pwm"/>
+        </xacro:if>
+        <xacro:unless value="$(arg motors)">
+          <command_interface name="position"/>
+        </xacro:unless>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </xacro:macro>
+
+    <xacro:wheel_interface name="base_left_wheel_joint"/>
+    <xacro:wheel_interface name="base_right_wheel_joint"/>
+  </ros2_control>
+
+  <xacro:unless value="$(arg motors)">
+    <gazebo reference="caster_wheel_link">
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
+    </gazebo>
+    <gazebo>
+      <plugin filename="libgz_ros2_control-system.so"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find my_robot_bringup)/config/encoder_controllers.yaml</parameters>
+        <ros>
+          <namespace>/sim</namespace>
+        </ros>
+      </plugin>
+    </gazebo>
+  </xacro:unless>
+</robot>

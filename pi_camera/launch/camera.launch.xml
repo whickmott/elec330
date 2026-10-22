@@ -1,0 +1,24 @@
+<launch>
+  <arg name="sensor_id" default="0"/>
+  <arg name="width" default="640"/>
+  <arg name="height" default="480"/>
+  <arg name="viewer" default="true"/>
+
+  <group scoped="true">
+    <unset_env name="DISPLAY"/>
+
+    <node pkg="gscam" exec="gscam_node" name="pi_camera" output="screen">
+      <param name="camera_name" value="pi_camera"/>
+      <param name="frame_id" value="camera_optical_frame"/>
+      <param name="image_encoding" value="rgb8"/>
+      <param name="sync_sink" value="false"/>
+      <param name="use_gst_timestamps" value="false"/>
+      <param name="gscam_config" type="str"
+             value="nvarguscamerasrc sensor-id=$(var sensor_id) ! video/x-raw(memory:NVMM),width=1920,height=1080,format=NV12,framerate=30/1 ! nvvidconv ! video/x-raw,width=$(var width),height=$(var height),format=BGRx ! videoconvert ! video/x-raw,format=RGB"/>
+    </node>
+  </group>
+
+  <node pkg="rqt_image_view" exec="rqt_image_view"
+        name="camera_viewer" args="/camera/image_raw"
+        output="screen" if="$(var viewer)"/>
+</launch>
